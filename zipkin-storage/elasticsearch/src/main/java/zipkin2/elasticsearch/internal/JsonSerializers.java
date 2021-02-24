@@ -65,13 +65,13 @@ public final class JsonSerializers {
         continue;
       }
       switch (parser.currentName()) {
-        case "traceId":
+        case "doc.traceId":
           result.traceId(parser.getText());
           break;
-        case "parentId":
+        case "doc.parentId":
           result.parentId(parser.getText());
           break;
-        case "id":
+        case "_id":
           result.id(parser.getText());
           break;
         case "kind":
@@ -80,16 +80,18 @@ public final class JsonSerializers {
         case "name":
           result.name(parser.getText());
           break;
-        case "timestamp":
+        case "doc.@timestamp":
           result.timestamp(parser.getLongValue());
           break;
         case "duration":
           result.duration(parser.getLongValue());
           break;
-        case "localEndpoint":
+        //case "localEndpoint":
+        case "doc.callEvent.callClient":
           result.localEndpoint(parseEndpoint(parser));
           break;
-        case "remoteEndpoint":
+        //case "remoteEndpoint":
+        case "doc.callEvent.callServer":
           result.remoteEndpoint(parseEndpoint(parser));
           break;
         case "annotations":

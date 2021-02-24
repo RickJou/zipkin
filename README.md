@@ -186,7 +186,7 @@ following. JDK 11 is required to compile the source.
 # Build the server and also make its dependencies
 $ ./mvnw -q --batch-mode -DskipTests --also-make -pl zipkin-server clean install
 # Run the server
-$ java -jar ./zipkin-server/target/zipkin-server-*exec.jar
+$ java -jar ./zipkin-server/target/zipkin-server-2.23.3-SNAPSHOT-exec.jar
 ```
 
 ## Artifacts

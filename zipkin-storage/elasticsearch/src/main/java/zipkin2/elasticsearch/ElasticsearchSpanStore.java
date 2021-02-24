@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
 import zipkin2.Call;
 import zipkin2.DependencyLink;
 import zipkin2.Span;
@@ -39,7 +40,9 @@ import static zipkin2.elasticsearch.VersionSpecificTemplates.TYPE_SPAN;
 
 final class ElasticsearchSpanStore implements SpanStore, Traces, ServiceAndSpanNames {
 
-  /** To not produce unnecessarily long queries, we don't look back further than first ES support */
+  /**
+   * To not produce unnecessarily long queries, we don't look back further than first ES support
+   */
   static final long EARLIEST_MS = 1456790400000L; // March 2016
 
   final SearchCallFactory search;
@@ -52,7 +55,8 @@ final class ElasticsearchSpanStore implements SpanStore, Traces, ServiceAndSpanN
   ElasticsearchSpanStore(ElasticsearchStorage es) {
     this.search = new SearchCallFactory(es.http());
     this.groupByTraceId = GroupByTraceId.create(es.strictTraceId());
-    this.allSpanIndices = new String[] {es.indexNameFormatter().formatType(TYPE_SPAN)};
+    this.allSpanIndices = new String[]{es.indexNameFormatter().formatType(TYPE_SPAN)};
+    //this.allSpanIndices = new String[] {};
     this.indexNameFormatter = es.indexNameFormatter();
     this.strictTraceId = es.strictTraceId();
     this.searchEnabled = es.searchEnabled();
@@ -127,11 +131,17 @@ final class ElasticsearchSpanStore implements SpanStore, Traces, ServiceAndSpanN
     // Unless we are strict, truncate the trace ID to 64bit (encoded as 16 characters)
     if (!strictTraceId && traceId.length() == 32) traceId = traceId.substring(16);
 
-    SearchRequest request = SearchRequest.create(asList(allSpanIndices)).term("traceId", traceId);
+    List<String> allIndices = asList(allSpanIndices);
+    for (int i = 0; i < allIndices.size(); i++) {
+      allIndices.set(i, allIndices.get(i).replace("span-*", ""));
+    }
+
+    SearchRequest request = SearchRequest.create(allIndices).term("doc.traceId", traceId);
     return search.newCall(request, BodyConverters.SPANS);
   }
 
-  @Override public Call<List<List<Span>>> getTraces(Iterable<String> traceIds) {
+  @Override
+  public Call<List<List<Span>>> getTraces(Iterable<String> traceIds) {
     Set<String> normalizedTraceIds = new LinkedHashSet<>();
     for (String traceId : traceIds) {
       // make sure we have a 16 or 32 character trace ID
@@ -145,11 +155,12 @@ final class ElasticsearchSpanStore implements SpanStore, Traces, ServiceAndSpanN
 
     if (normalizedTraceIds.isEmpty()) return Call.emptyList();
     SearchRequest request =
-      SearchRequest.create(asList(allSpanIndices)).terms("traceId", normalizedTraceIds);
+      SearchRequest.create(asList(allSpanIndices)).terms("doc.traceId", normalizedTraceIds);
     return search.newCall(request, BodyConverters.SPANS).map(groupByTraceId);
   }
 
-  @Override public Call<List<String>> getServiceNames() {
+  @Override
+  public Call<List<String>> getServiceNames() {
     if (!searchEnabled) return Call.emptyList();
 
     long endMillis = System.currentTimeMillis();
@@ -164,11 +175,13 @@ final class ElasticsearchSpanStore implements SpanStore, Traces, ServiceAndSpanN
     return search.newCall(request, BodyConverters.KEYS);
   }
 
-  @Override public Call<List<String>> getRemoteServiceNames(String serviceName) {
+  @Override
+  public Call<List<String>> getRemoteServiceNames(String serviceName) {
     return aggregatedFieldByServiceName(serviceName, "remoteEndpoint.serviceName");
   }
 
-  @Override public Call<List<String>> getSpanNames(String serviceName) {
+  @Override
+  public Call<List<String>> getSpanNames(String serviceName) {
     return aggregatedFieldByServiceName(serviceName, "name");
   }
 

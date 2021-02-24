@@ -93,7 +93,7 @@ zipkin:
     autocomplete-keys: ${AUTOCOMPLETE_KEYS:}
     autocomplete-ttl: ${AUTOCOMPLETE_TTL:3600000}
     autocomplete-cardinality: 20000
-    type: ${STORAGE_TYPE:mem}
+    type: ${STORAGE_TYPE:elasticsearch}
     throttle:
       enabled: ${STORAGE_THROTTLE_ENABLED:false}
       min-concurrency: ${STORAGE_THROTTLE_MIN_CONCURRENCY:10}
@@ -146,10 +146,10 @@ zipkin:
       use-ssl: ${CASSANDRA_USE_SSL:false}
     elasticsearch:
       # host is left unset intentionally, to defer the decision
-      hosts: ${ES_HOSTS:}
+      hosts: ${ES_HOSTS:http://47.96.249.173:9200}
       pipeline: ${ES_PIPELINE:}
       timeout: ${ES_TIMEOUT:10000}
-      index: ${ES_INDEX:zipkin}
+      index: ${ES_INDEX:bizlog}
       ensure-templates: ${ES_ENSURE_TEMPLATES:true}
       date-separator: ${ES_DATE_SEPARATOR:-}
       index-shards: ${ES_INDEX_SHARDS:5}
@@ -254,6 +254,7 @@ logging:
   pattern:
     level: "%clr{%5p} %clr{[%X{traceId}/%X{spanId}]}{yellow}"
   level:
+    root: DEBUG
     # Hush MySQL related logs
     org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor: 'WARN'
     com.zaxxer.hikari.HikariDataSource: 'WARN'
